@@ -33,6 +33,10 @@ div.music-sync-song-information {
     overflow: hidden;
 }
 
+div.music-sync-song-container a {
+    display: contents;
+}
+
 div.music-sync-song-container img {
     width: 100px;
     height: 100px;
