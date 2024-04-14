@@ -17,6 +17,7 @@
 
   let productType = ProductType.FREE;
 
+  let songLink = "https://dummyimage.com/200x200/000/fff";
   let songCover = "https://dummyimage.com/200x200/000/fff";
   let title = "Title";
   let artist = "Artist";
@@ -320,6 +321,7 @@
         }
 
         // Song Information
+        songLink = item.external_urls.spotify;
         songCover = item.album.images[1].url;
 
         let artistName = "";
@@ -340,7 +342,7 @@
   {#if authorized}
     <div class="music-sync">
       <div class="music-sync-song-container">
-        <img src={songCover} alt="Song Cover" />
+        <a href={songLink}><img src={songCover} alt="Song Cover" /></a>
         <div class="music-sync-song-information">
           <span>{title}</span><br />
           <span><b>by</b> <i>{artist}</i></span><br />
