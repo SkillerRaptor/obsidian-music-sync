@@ -23,7 +23,7 @@ const DEFAULT_SETTINGS: MusicSyncSettings = {
 };
 
 export class SettingTab extends PluginSettingTab {
-    plugin: MusicSync;
+    private plugin: MusicSync;
 
     constructor(app: App, plugin: MusicSync) {
         super(app, plugin);
@@ -104,6 +104,12 @@ export class SettingTab extends PluginSettingTab {
 
                             this.display();
                         });
+                });
+
+            new Setting(containerEl)
+                .setName("Login into Spotify")
+                .addButton((button) => {
+                    button.setButtonText("Login").onClick(async (event) => {});
                 });
         }
     }

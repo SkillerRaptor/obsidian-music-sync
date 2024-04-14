@@ -9,6 +9,9 @@ import console from "console";
 import esbuild from "esbuild";
 import process from "process";
 
+import esbuildSvelte from "esbuild-svelte";
+import sveltePreprocess from "svelte-preprocess";
+
 const prod = process.argv[2] === "production";
 
 const context = await esbuild.context({
@@ -36,6 +39,11 @@ const context = await esbuild.context({
   sourcemap: prod ? false : "inline",
   treeShaking: true,
   outfile: "main.js",
+  plugins: [
+    esbuildSvelte({
+      preprocess: sveltePreprocess(),
+    }),
+  ],
 });
 
 if (prod) {

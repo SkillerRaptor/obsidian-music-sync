@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { Plugin, addIcon } from "obsidian";
+import { Plugin, WorkspaceLeaf, addIcon } from "obsidian";
 
-import { MusicSyncSettings, SettingTab } from "./settings";
+import { type MusicSyncSettings, SettingTab } from "./settings";
+import { ExampleView, VIEW_TYPE_EXAMPLE } from "./views/spotifyView";
 
 export default class MusicSync extends Plugin {
-    settings: MusicSyncSettings;
-
+    public settings!: MusicSyncSettings;
     private spotifyButton?: HTMLElement;
 
     async onload() {
@@ -25,6 +25,8 @@ export default class MusicSync extends Plugin {
             this.addSpotifyButton();
         }
 
+        this.registerView(VIEW_TYPE_EXAMPLE, (leaf) => new ExampleView(leaf));
+
         this.addSettingTab(new SettingTab(this.app, this));
     }
 
@@ -34,7 +36,28 @@ export default class MusicSync extends Plugin {
         this.spotifyButton = this.addRibbonIcon(
             "spotify",
             "Open Spotify Widget",
-            (_event) => {}
+            async (_event) => {
+                const { workspace } = this.app;
+
+                let leaf: WorkspaceLeaf | null = null;
+                const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
+
+                if (leaves.length > 0) {
+                    // A leaf with our view already exists, use that
+                    leaf = leaves[0];
+                } else {
+                    // Our view could not be found in the workspace, create a new leaf
+                    // in the right sidebar for it
+                    leaf = workspace.getRightLeaf(false);
+                    await leaf!.setViewState({
+                        type: VIEW_TYPE_EXAMPLE,
+                        active: true,
+                    });
+                }
+
+                // "Reveal" the leaf in case it is in a collapsed sidebar
+                workspace.revealLeaf(leaf!);
+            }
         );
     }
 
