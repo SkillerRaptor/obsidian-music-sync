@@ -5,21 +5,26 @@
  */
 
 import { Plugin } from "obsidian";
-import { type MusicSyncSettings, SettingTab } from "./settings";
+import { type MusicSyncSettings, SettingsTab } from "./settings";
 import { Spotify } from "./spotify/spotify";
 
 export default class MusicSync extends Plugin {
     public settings!: MusicSyncSettings;
+    public settingsTab!: SettingsTab;
 
     public spotify!: Spotify;
 
     async onload() {
-        await SettingTab.loadSettings(this);
+        await SettingsTab.loadSettings(this);
 
         this.spotify = new Spotify(this);
 
-        this.addSettingTab(new SettingTab(this.app, this));
+        this.addSettingTab(
+            (this.settingsTab = new SettingsTab(this.app, this))
+        );
     }
 
-    onunload() {}
+    onunload() {
+        this.spotify.unload();
+    }
 }

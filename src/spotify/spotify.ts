@@ -6,7 +6,10 @@
 
 import type MusicSync from "src/main";
 import { SpotifyView } from "./spotifyView";
-import { WorkspaceLeaf, addIcon } from "obsidian";
+import { Notice, WorkspaceLeaf, addIcon, requestUrl } from "obsidian";
+import { Utils } from "src/utils";
+import { SettingsTab } from "src/settings";
+import { SpotifyApi } from "@spotify/web-api-ts-sdk";
 
 export class Spotify {
     static CLIENT_ID = "d083d33197d84a2cb5eb079b80783568";
@@ -14,9 +17,15 @@ export class Spotify {
     static SCOPE =
         "user-read-playback-state user-modify-playback-state user-read-currently-playing app-remote-control streaming playlist-read-private playlist-read-collaborative user-follow-read user-read-playback-position user-top-read user-read-recently-played user-library-read user-read-email user-read-private";
     static AUTH_URL = "https://accounts.spotify.com/authorize";
+    static TOKEN_URL = "https://accounts.spotify.com/api/token";
 
     private plugin: MusicSync;
     private spotifyButton?: HTMLElement;
+
+    private codeVerifier?: string;
+    private spotifySDK?: SpotifyApi;
+    private refreshTimer?: NodeJS.Timer;
+    private onlineRefresh?: () => Promise<void>;
 
     public view!: SpotifyView;
 
@@ -35,6 +44,75 @@ export class Spotify {
             (leaf) => (this.view = new SpotifyView(leaf, this.plugin))
         );
 
+        if (!this.plugin.settings.spotifyAccessToken?.refresh_token) {
+            this.spotifySDK = undefined;
+
+            if (this.view) {
+                this.view.setSpotifySDK(this.spotifySDK);
+            }
+        }
+
+        // Register auth url
+        this.plugin.registerObsidianProtocolHandler(
+            "spotify/authorization",
+            async (protocol_data) => {
+                if (protocol_data.error) {
+                    new Notice(
+                        "Failed to verify Spotify authorization state with error code: " +
+                            protocol_data.error
+                    );
+                    return;
+                }
+
+                /*
+                // NOTE: Should this work?
+                if (protocol_data.state != this.codeVerifier) {
+                    new Notice("Failed to verify Spotify authorization state!");
+                    return;
+                }
+                */
+
+                const code = protocol_data.code;
+
+                const access_token = await requestUrl({
+                    url: Spotify.TOKEN_URL,
+                    method: "POST",
+                    headers: {
+                        "content-type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({
+                        grant_type: "authorization_code",
+                        code,
+                        redirect_uri: "spotify/authorization",
+                        client_id: Spotify.CLIENT_ID,
+                        code_verifier: this.codeVerifier!,
+                    }).toString(),
+                    throw: false,
+                });
+
+                const data = await access_token.json;
+
+                this.plugin.settings.spotifyAccessToken = data;
+                await SettingsTab.saveSettings(this.plugin);
+
+                this.spotifySDK = SpotifyApi.withAccessToken(
+                    Spotify.CLIENT_ID,
+                    this.plugin.settings.spotifyAccessToken!
+                );
+                if (this.view) {
+                    this.view.setSpotifySDK(this.spotifySDK);
+                }
+
+                this.view.setAuthorized(
+                    this.plugin.settings.spotifyAccessToken !== undefined
+                );
+
+                new Notice("Spotify successfully authorized!");
+
+                this.plugin.settingsTab.display();
+            }
+        );
+
         // Add button to sidebar if enabled
         if (
             this.plugin.settings.useSpotify &&
@@ -42,6 +120,15 @@ export class Spotify {
         ) {
             this.addSpotifyButton();
         }
+    }
+
+    unload() {
+        this.spotifySDK = undefined;
+        if (this.view) {
+            this.view.setSpotifySDK(this.spotifySDK);
+        }
+        clearInterval(this.refreshTimer);
+        window.removeEventListener("online", this.onlineRefresh!);
     }
 
     addSpotifyButton() {
@@ -75,10 +162,10 @@ export class Spotify {
         }
     }
 
-    static async auth() {
-        const codeVerifier = this.generateRandomString(128);
-        const hashedCode = await this.generateSHA256(codeVerifier);
-        const codeChallenge = this.generateBase64(hashedCode);
+    async auth() {
+        const codeVerifier = Utils.generateRandomString(128);
+        const hashedCode = await Utils.generateSHA256(codeVerifier);
+        const codeChallenge = Utils.generateBase64(hashedCode);
 
         const parameters = {
             client_id: Spotify.CLIENT_ID,
@@ -92,29 +179,75 @@ export class Spotify {
         const authUrl = new URL(Spotify.AUTH_URL);
         authUrl.search = new URLSearchParams(parameters).toString();
         window.location.href = authUrl.toString();
+        this.codeVerifier = codeVerifier;
     }
 
-    static generateBase64(input: ArrayBuffer) {
-        return btoa(String.fromCharCode(...new Uint8Array(input)))
-            .replace(/=/g, "")
-            .replace(/\+/g, "-")
-            .replace(/\//g, "_");
+    async logout() {
+        this.spotifySDK?.logOut();
+        this.plugin.settings.spotifyAccessToken = undefined;
+        await SettingsTab.saveSettings(this.plugin);
+
+        if (this.view) {
+            this.view.setAuthorized(false);
+        }
+
+        this.unload();
+
+        this.plugin.settingsTab.display();
     }
 
-    static generateSHA256(plain: string) {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(plain);
-        return window.crypto.subtle.digest("SHA-256", data);
+    async initRefresh() {
+        this.refreshTimer = setInterval(async () => {
+            await this.refresh();
+        }, 3600000);
+
+        this.onlineRefresh = async () => {
+            await this.refresh();
+
+            clearInterval(this.refreshTimer);
+            setTimeout(async () => {
+                this.refreshTimer = setInterval(async () => {
+                    await this.refresh();
+                }, 3600000);
+            }, 3000);
+        };
+
+        window.addEventListener("online", this.onlineRefresh!);
     }
 
-    static generateRandomString(length: number) {
-        const characters =
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        const values = crypto.getRandomValues(new Uint8Array(length));
-        return values.reduce(
-            (previous, current) =>
-                previous + characters[current % characters.length],
-            ""
+    async refresh() {
+        const refresh_token =
+            this.plugin.settings.spotifyAccessToken?.refresh_token;
+
+        const access_token = await requestUrl({
+            url: Spotify.TOKEN_URL,
+            method: "POST",
+            headers: {
+                "content-type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+                grant_type: "refresh_token",
+                refresh_token: refresh_token!,
+                client_id: Spotify.CLIENT_ID,
+            }).toString(),
+            throw: false,
+        });
+
+        const data = await access_token.json;
+
+        this.plugin.settings.spotifyAccessToken = data;
+        await SettingsTab.saveSettings(this.plugin);
+
+        this.spotifySDK = SpotifyApi.withAccessToken(
+            Spotify.CLIENT_ID,
+            this.plugin.settings.spotifyAccessToken!
+        );
+        if (this.view) {
+            this.view.setSpotifySDK(this.spotifySDK);
+        }
+
+        this.view.setAuthorized(
+            this.plugin.settings.spotifyAccessToken !== undefined
         );
     }
 }

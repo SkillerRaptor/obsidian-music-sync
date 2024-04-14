@@ -4,10 +4,11 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { ItemView, WorkspaceLeaf, type ViewStateResult } from "obsidian";
+import { ItemView, WorkspaceLeaf } from "obsidian";
 
 import ViewPage from "./spotifyView.svelte";
 import type MusicSync from "src/main";
+import type { SpotifyApi } from "@spotify/web-api-ts-sdk";
 
 export class SpotifyView extends ItemView {
     public static VIEW_TYPE = "spotify-view";
@@ -25,6 +26,9 @@ export class SpotifyView extends ItemView {
             target: this.contentEl,
             props: {
                 enabled: this.plugin.settings.useSpotify,
+                authorized:
+                    this.plugin.settings.spotifyAccessToken !== undefined,
+                spotifySDK: undefined,
             },
         });
     }
@@ -35,6 +39,14 @@ export class SpotifyView extends ItemView {
 
     setEnabled(enabled: boolean) {
         this.viewPage!.$set({ enabled: enabled });
+    }
+
+    setAuthorized(authorized: boolean) {
+        this.viewPage!.$set({ authorized: authorized });
+    }
+
+    setSpotifySDK(spotifySDK?: SpotifyApi) {
+        this.viewPage!.$set({ spotifySDK: spotifySDK });
     }
 
     getIcon() {
