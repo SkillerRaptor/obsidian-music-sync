@@ -1,13 +1,21 @@
 <script lang="ts">
-  export let variable: number;
+  import type MusicSync from "src/main";
+
+  export let enabled: boolean;
 </script>
 
-<div class="number">
-  <span>My number is {variable}!</span>
-</div>
+{#if enabled}
+  <div class="number">
+    <span>My number is 1!</span>
+  </div>
 
-<style>
-  .number {
-    color: red;
-  }
-</style>
+  <style>
+    .number {
+      color: red;
+    }
+  </style>
+{:else}
+  <div class="music-sync-inactive-widget">
+    <h2>This widget is not active</h2>
+  </div>
+{/if}

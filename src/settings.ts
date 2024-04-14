@@ -6,6 +6,7 @@
 
 import { App, PluginSettingTab, Setting, getIcon, setIcon } from "obsidian";
 import MusicSync from "./main";
+import { Spotify } from "./spotify/spotify";
 
 export interface MusicSyncSettings {
     // Spotify
@@ -14,6 +15,7 @@ export interface MusicSyncSettings {
 }
 
 const DEFAULT_SETTINGS: MusicSyncSettings = {
+    // Spotify
     useSpotify: false,
     showSpotifyButton: true,
 };
@@ -49,6 +51,21 @@ export class SettingTab extends PluginSettingTab {
                         this.plugin.settings.useSpotify = value;
                         await this.saveSettings();
 
+                        // Update view
+                        this.plugin.spotify.view.setEnabled(
+                            this.plugin.settings.useSpotify
+                        );
+
+                        // Re-enable buttons
+                        if (
+                            this.plugin.settings.useSpotify &&
+                            this.plugin.settings.showSpotifyButton
+                        ) {
+                            this.plugin.spotify.addSpotifyButton();
+                        } else {
+                            this.plugin.spotify.removeSpotifyButton();
+                        }
+
                         this.display();
                     });
             });
@@ -69,13 +86,37 @@ export class SettingTab extends PluginSettingTab {
                             await this.saveSettings();
 
                             if (value) {
-                                this.plugin.addSpotifyButton();
+                                this.plugin.spotify.addSpotifyButton();
                             } else {
-                                this.plugin.removeSpotifyButton();
+                                this.plugin.spotify.removeSpotifyButton();
                             }
 
                             this.display();
                         });
+                });
+
+            new Setting(containerEl)
+                .setName("Authorization Status")
+                .setDesc("Verified!");
+
+            new Setting(containerEl)
+                .setName("Authorize Spotify Client")
+                .setDesc(
+                    "Authorizes access to your Spotify data for the plugin"
+                )
+                .addButton((button) => {
+                    button.setButtonText("Auth").onClick(async (event) => {
+                        await Spotify.auth();
+                    });
+                });
+
+            new Setting(containerEl)
+                .setName("Logout Spotify Client")
+                .setDesc(
+                    "Removes the access to your Spotify data for the plugin"
+                )
+                .addButton((button) => {
+                    button.setButtonText("Logout").onClick(async (event) => {});
                 });
         }
     }

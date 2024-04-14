@@ -4,17 +4,41 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { ItemView, WorkspaceLeaf } from "obsidian";
+import { ItemView, WorkspaceLeaf, type ViewStateResult } from "obsidian";
 
-import Component from "./spotifyView.svelte";
+import ViewPage from "./spotifyView.svelte";
+import type MusicSync from "src/main";
 
 export class SpotifyView extends ItemView {
     public static VIEW_TYPE = "spotify-view";
 
-    private component!: Component;
+    private plugin: MusicSync;
+    private viewPage?: ViewPage;
 
-    constructor(leaf: WorkspaceLeaf) {
+    constructor(leaf: WorkspaceLeaf, plugin: MusicSync) {
         super(leaf);
+        this.plugin = plugin;
+    }
+
+    async onOpen() {
+        this.viewPage = new ViewPage({
+            target: this.contentEl,
+            props: {
+                enabled: this.plugin.settings.useSpotify,
+            },
+        });
+    }
+
+    async onClose() {
+        this.viewPage!.$destroy();
+    }
+
+    setEnabled(enabled: boolean) {
+        this.viewPage!.$set({ enabled: enabled });
+    }
+
+    getIcon() {
+        return "spotify";
     }
 
     getViewType() {
@@ -23,18 +47,5 @@ export class SpotifyView extends ItemView {
 
     getDisplayText() {
         return "Spotify Widget";
-    }
-
-    async onOpen() {
-        this.component = new Component({
-            target: this.contentEl,
-            props: {
-                variable: 1,
-            },
-        });
-    }
-
-    async onClose() {
-        this.component.$destroy();
     }
 }
