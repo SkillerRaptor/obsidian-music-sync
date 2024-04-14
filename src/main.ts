@@ -4,101 +4,43 @@
  * SPDX-License-Identifier: MIT
  */
 
-import {
-    App,
-    Editor,
-    MarkdownView,
-    Modal,
-    Notice,
-    Plugin,
-    addIcon,
-} from "obsidian";
+import { Plugin, addIcon } from "obsidian";
 
 import { MusicSyncSettings, SettingTab } from "./settings";
 
 export default class MusicSync extends Plugin {
     settings: MusicSyncSettings;
 
+    private spotifyButton?: HTMLElement;
+
     async onload() {
         await SettingTab.loadSettings(this);
 
         addIcon(
             "spotify",
-            "<path fill='currentColor' d='M19.098 10.638c-3.868-2.297-10.248-2.508-13.941-1.387-.593.18-1.22-.155-1.399-.748-.18-.593.154-1.22.748-1.4 4.239-1.287 11.285-1.038 15.738 1.605.533.317.708 1.005.392 1.538-.316.533-1.005.709-1.538.392zm-.126 3.403c-.272.44-.847.578-1.287.308-3.225-1.982-8.142-2.557-11.958-1.399-.494.15-1.017-.129-1.167-.623-.149-.495.13-1.016.624-1.167 4.358-1.322 9.776-.682 13.48 1.595.44.27.578.847.308 1.286zm-1.469 3.267c-.215.354-.676.465-1.028.249-2.818-1.722-6.365-2.111-10.542-1.157-.402.092-.803-.16-.895-.562-.092-.403.159-.804.562-.896 4.571-1.045 8.492-.595 11.655 1.338.353.215.464.676.248 1.028zm-5.503-17.308c-6.627 0-12 5.373-12 12 0 6.628 5.373 12 12 12 6.628 0 12-5.372 12-12 0-6.627-5.372-12-12-12z' />"
+            "<path fill='currentColor' d='M79.575 44.325c-16.117-9.571-42.7-10.45-58.088-5.779-2.471.75-5.083-.646-5.829-3.117-.75-2.471.642-5.083 3.117-5.833 17.662-5.363 47.021-4.325 65.575 6.688 2.221 1.321 2.95 4.188 1.633 6.408-1.317 2.221-4.187 2.954-6.408 1.633zm-.525 14.179c-1.133 1.833-3.529 2.408-5.362 1.283-13.437-8.258-33.925-10.654-49.825-5.829-2.058.625-4.238-.538-4.863-2.596-.621-2.062.542-4.233 2.6-4.862 18.158-5.508 40.733-2.842 56.167 6.646 1.833 1.125 2.408 3.529 1.283 5.358zm-6.121 13.613c-.896 1.475-2.817 1.938-4.283 1.037-11.742-7.175-26.521-8.796-43.925-4.821-1.675.383-3.346-.667-3.729-2.342-.383-1.679.662-3.35 2.342-3.733 19.046-4.354 35.383-2.479 48.563 5.575 1.471.896 1.933 2.817 1.033 4.283zm-22.929-72.117c-27.612 0-50 22.388-50 50 0 27.617 22.388 50 50 50 27.617 0 50-22.383 50-50 0-27.612-22.383-50-50-50z' />"
         );
 
-        // This creates an icon in the left ribbon.
-        const ribbonIconEl = this.addRibbonIcon(
-            "dice",
-            "Sample Plugin",
-            (evt: MouseEvent) => {
-                // Called when the user clicks the icon.
-                new Notice("This is a notice!");
-            }
-        );
-        // Perform additional things with the ribbon
-        ribbonIconEl.addClass("my-plugin-ribbon-class");
-
-        // This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-        const statusBarItemEl = this.addStatusBarItem();
-        statusBarItemEl.setText("Status Bar Text");
-
-        // This adds a simple command that can be triggered anywhere
-        this.addCommand({
-            id: "open-sample-modal-simple",
-            name: "Open sample modal (simple)",
-            callback: () => {
-                new SampleModal(this.app).open();
-            },
-        });
-        // This adds an editor command that can perform some operation on the current editor instance
-        this.addCommand({
-            id: "sample-editor-command",
-            name: "Sample editor command",
-            editorCallback: (editor: Editor, view: MarkdownView) => {
-                console.log(editor.getSelection());
-                editor.replaceSelection("Sample Editor Command");
-            },
-        });
-        // This adds a complex command that can check whether the current state of the app allows execution of the command
-        this.addCommand({
-            id: "open-sample-modal-complex",
-            name: "Open sample modal (complex)",
-            checkCallback: (checking: boolean) => {
-                // Conditions to check
-                const markdownView =
-                    this.app.workspace.getActiveViewOfType(MarkdownView);
-                if (markdownView) {
-                    // If checking is true, we're simply "checking" if the command can be run.
-                    // If checking is false, then we want to actually perform the operation.
-                    if (!checking) {
-                        new SampleModal(this.app).open();
-                    }
-
-                    // This command will only show up in Command Palette when the check function returns true
-                    return true;
-                }
-            },
-        });
+        if (this.settings.useSpotify && this.settings.showSpotifyButton) {
+            this.addSpotifyButton();
+        }
 
         this.addSettingTab(new SettingTab(this.app, this));
     }
 
     onunload() {}
-}
 
-class SampleModal extends Modal {
-    constructor(app: App) {
-        super(app);
+    addSpotifyButton(): void {
+        this.spotifyButton = this.addRibbonIcon(
+            "spotify",
+            "Open Spotify Widget",
+            (_event) => {}
+        );
     }
 
-    onOpen() {
-        const { contentEl } = this;
-        contentEl.setText("Woah!");
-    }
-
-    onClose() {
-        const { contentEl } = this;
-        contentEl.empty();
+    removeSpotifyButton(): void {
+        if (this.spotifyButton) {
+            this.spotifyButton.parentNode?.removeChild(this.spotifyButton);
+        }
     }
 }

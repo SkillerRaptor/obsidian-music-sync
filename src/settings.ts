@@ -12,12 +12,14 @@ export interface MusicSyncSettings {
     useSpotify: boolean;
     spotifyClientId: string;
     spotifyClientSecret: string;
+    showSpotifyButton: boolean;
 }
 
 const DEFAULT_SETTINGS: MusicSyncSettings = {
     useSpotify: false,
     spotifyClientId: "",
     spotifyClientSecret: "",
+    showSpotifyButton: true,
 };
 
 export class SettingTab extends PluginSettingTab {
@@ -35,18 +37,14 @@ export class SettingTab extends PluginSettingTab {
         containerEl.createEl("h2", { text: "Music Sync" });
 
         new Setting(containerEl).setName("General Settings").setHeading();
-
         new Setting(containerEl)
             .setName("Use Spotify API")
             .setDesc("Enable this to make use of the Spotify Widget")
             .then((setting) => {
-                const iconDiv = createDiv();
+                const iconEl = createDiv();
+                setIcon(iconEl, "spotify");
 
-                const icon = getIcon("spotify");
-                icon!.setAttribute("viewBox", "0 0 24 24");
-                iconDiv.appendChild(icon!);
-
-                setting.settingEl.prepend(iconDiv);
+                setting.settingEl.prepend(iconEl);
             })
             .addToggle((toggle) => {
                 toggle
@@ -84,6 +82,28 @@ export class SettingTab extends PluginSettingTab {
                         this.plugin.settings.spotifyClientSecret = value;
                         await this.saveSettings();
                     });
+                });
+
+            new Setting(containerEl)
+                .setName("Show Spotify Button")
+                .setDesc(
+                    "Enable this to show the Spotify button on the sidebar"
+                )
+                .addToggle((toggle) => {
+                    toggle
+                        .setValue(this.plugin.settings.showSpotifyButton)
+                        .onChange(async (value) => {
+                            this.plugin.settings.showSpotifyButton = value;
+                            await this.saveSettings();
+
+                            if (value) {
+                                this.plugin.addSpotifyButton();
+                            } else {
+                                this.plugin.removeSpotifyButton();
+                            }
+
+                            this.display();
+                        });
                 });
         }
     }
