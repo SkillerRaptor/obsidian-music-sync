@@ -28,7 +28,7 @@ export class SpotifyView extends ItemView {
                 enabled: this.plugin.settings.useSpotify,
                 authorized:
                     this.plugin.settings.spotifyAccessToken !== undefined,
-                spotifySDK: undefined,
+                spotifySDK: this.plugin.spotify.spotifySDK,
             },
         });
     }

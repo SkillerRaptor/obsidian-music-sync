@@ -18,6 +18,7 @@ export default class MusicSync extends Plugin {
         await SettingsTab.loadSettings(this);
 
         this.spotify = new Spotify(this);
+        await this.spotify.load();
 
         this.addSettingTab(
             (this.settingsTab = new SettingsTab(this.app, this))

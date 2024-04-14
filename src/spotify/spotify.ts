@@ -22,8 +22,8 @@ export class Spotify {
     private plugin: MusicSync;
     private spotifyButton?: HTMLElement;
 
+    public spotifySDK?: SpotifyApi;
     private codeVerifier?: string;
-    private spotifySDK?: SpotifyApi;
     private refreshTimer?: NodeJS.Timer;
     private onlineRefresh?: () => Promise<void>;
 
@@ -43,14 +43,6 @@ export class Spotify {
             SpotifyView.VIEW_TYPE,
             (leaf) => (this.view = new SpotifyView(leaf, this.plugin))
         );
-
-        if (!this.plugin.settings.spotifyAccessToken?.refresh_token) {
-            this.spotifySDK = undefined;
-
-            if (this.view) {
-                this.view.setSpotifySDK(this.spotifySDK);
-            }
-        }
 
         // Register auth url
         this.plugin.registerObsidianProtocolHandler(
@@ -83,7 +75,7 @@ export class Spotify {
                     body: new URLSearchParams({
                         grant_type: "authorization_code",
                         code,
-                        redirect_uri: "spotify/authorization",
+                        redirect_uri: Spotify.REDIRECT_URI,
                         client_id: Spotify.CLIENT_ID,
                         code_verifier: this.codeVerifier!,
                     }).toString(),
@@ -119,6 +111,18 @@ export class Spotify {
             this.plugin.settings.showSpotifyButton
         ) {
             this.addSpotifyButton();
+        }
+    }
+
+    async load() {
+        if (this.plugin.settings.spotifyAccessToken) {
+            await this.initRefresh();
+        } else {
+            this.spotifySDK = undefined;
+
+            if (this.view) {
+                this.view.setSpotifySDK(this.spotifySDK);
+            }
         }
     }
 
@@ -197,10 +201,6 @@ export class Spotify {
     }
 
     async initRefresh() {
-        this.refreshTimer = setInterval(async () => {
-            await this.refresh();
-        }, 3600000);
-
         this.onlineRefresh = async () => {
             await this.refresh();
 
@@ -213,6 +213,11 @@ export class Spotify {
         };
 
         window.addEventListener("online", this.onlineRefresh!);
+
+        await this.refresh();
+        this.refreshTimer = setInterval(async () => {
+            await this.refresh();
+        }, 3600000);
     }
 
     async refresh() {
@@ -235,13 +240,14 @@ export class Spotify {
 
         const data = await access_token.json;
 
-        this.plugin.settings.spotifyAccessToken = data;
-        await SettingsTab.saveSettings(this.plugin);
+        // this.plugin.settings.spotifyAccessToken = data;
+        // await SettingsTab.saveSettings(this.plugin);
 
         this.spotifySDK = SpotifyApi.withAccessToken(
             Spotify.CLIENT_ID,
             this.plugin.settings.spotifyAccessToken!
         );
+
         if (this.view) {
             this.view.setSpotifySDK(this.spotifySDK);
         }

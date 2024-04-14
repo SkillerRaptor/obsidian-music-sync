@@ -9,3 +9,7 @@ div.music-sync-inactive-widget {
     justify-content: center;
     align-items: center;
 }
+
+div.music-sync-song-container img {
+    border-radius: 50%;
+}

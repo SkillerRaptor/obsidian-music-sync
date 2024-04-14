@@ -3,20 +3,29 @@
 
   export let enabled: boolean;
   export let authorized: boolean;
-  export const spotifySDK: SpotifyApi | undefined = undefined;
+  export let spotifySDK: SpotifyApi | undefined;
+
+  $: {
+    spotifySDK?.currentUser.profile().then((accountData) => {
+      console.log(`Product Type: ${accountData.product}`);
+    });
+  }
+
+  setInterval(async () => {
+    if (spotifySDK) {
+      let data = await spotifySDK!.player.getPlaybackState();
+      // let event = new CustomEvent("spotifyliveupdate", { detail: data });
+      // document.dispatchEvent(event);
+    }
+  }, 1000);
 </script>
 
 {#if enabled}
   {#if authorized}
-    <div class="number">
-      <span>My number is 1!</span>
+    <div class="music-sync-song-container">
+      <img src="https://dummyimage.com/200x200/000/fff" alt="Song Cover" />
+      <span></span>
     </div>
-
-    <style>
-      .number {
-        color: red;
-      }
-    </style>
   {:else}
     <div class="music-sync-inactive-widget">
       <h2>Spotify is not authorized</h2>
