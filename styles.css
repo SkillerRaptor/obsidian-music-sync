@@ -99,6 +99,7 @@ div.music-sync-song-controls button:active {
 .music-sync-song-controls .music-sync-volume-slider {
     display: none;
     position: absolute;
+    height: 8px;
     transform: translateY(-63px) rotate(270deg);
 }
 
