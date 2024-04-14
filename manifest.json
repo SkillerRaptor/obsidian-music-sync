@@ -1,0 +1,10 @@
+{
+	"id": "music-sync",
+	"name": "Music Sync",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Adds a music player (e.g. Spotify) widget.",
+	"author": "SkillerRaptor",
+	"authorUrl": "https://github.com/SkillerRaptor",
+	"isDesktopOnly": true
+}
