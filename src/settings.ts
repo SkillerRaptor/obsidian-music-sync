@@ -37,10 +37,22 @@ export class SettingsTab extends PluginSettingTab {
 
         containerEl.createEl("h2", { text: "Music Sync" });
 
+        const spotifyApiName = new DocumentFragment();
+        spotifyApiName.createSpan({}, (span) => {
+            span.innerHTML =
+                "Use <a href='https://developer.spotify.com/documentation/web-api'>Spotify API</a>";
+        });
+
+        const spotifyApiDescription = new DocumentFragment();
+        spotifyApiDescription.createSpan({}, (span) => {
+            span.innerHTML =
+                "Enable this to make use of the <a href='https://spotify.com'>Spotify</a> Widget";
+        });
+
         new Setting(containerEl).setName("General Settings").setHeading();
         new Setting(containerEl)
-            .setName("Use Spotify API")
-            .setDesc("Enable this to make use of the Spotify Widget")
+            .setName(spotifyApiName)
+            .setDesc(spotifyApiDescription)
             .then((setting) => {
                 const iconEl = createDiv();
                 setIcon(iconEl, "spotify");
