@@ -239,9 +239,16 @@ export class Spotify {
         });
 
         const data = await access_token.json;
+        if (data.error) {
+            new Notice(
+                "Failed to get refresh token from Spotify with error code: " +
+                    data.error_description
+            );
+            return;
+        }
 
-        // this.plugin.settings.spotifyAccessToken = data;
-        // await SettingsTab.saveSettings(this.plugin);
+        this.plugin.settings.spotifyAccessToken = data;
+        await SettingsTab.saveSettings(this.plugin);
 
         this.spotifySDK = SpotifyApi.withAccessToken(
             Spotify.CLIENT_ID,

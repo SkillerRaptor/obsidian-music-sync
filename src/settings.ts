@@ -132,6 +132,8 @@ export class SettingsTab extends PluginSettingTab {
                     });
                 });
         }
+
+        new Setting(containerEl).setName("Style Settings").setHeading();
     }
 
     static async loadSettings(plugin: MusicSync) {

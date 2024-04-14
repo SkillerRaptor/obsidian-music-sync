@@ -4,12 +4,105 @@
  * SPDX-License-Identifier: MIT
  */
 
+/* Hide Scrollbar */
+
+.workspace-leaf-content .view-content:has(.music-sync)::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+}
+
 div.music-sync-inactive-widget {
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
+/* Song Container */
+
+div.music-sync-song-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+}
+
+div.music-sync-song-information {
+    min-width: 0px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
 div.music-sync-song-container img {
-    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    margin: 0px;
+    border-radius: 10%;
+    border: 3px solid var(--text-faint);
+}
+
+div.music-sync-song-container span {
+    color: var(--text-normal);
+    font-size: 15px;
+    padding-left: 10px;
+}
+
+/* Player */
+
+.music-sync-song-player {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+/* Controls */
+
+div.music-sync-song-controls {
+    width: 100%;
+    display: inline-flex;
+}
+
+div.music-sync-song-controls button {
+    display: inline-flex;
+    flex: 1 100%;
+    justify-content: center;
+    align-items: center;
+
+    background: none;
+    box-shadow: none;
+
+    padding: 0px;
+    margin: 0px;
+}
+
+div.music-sync-song-controls button:hover {
+    background: var(--text-faint);
+}
+
+div.music-sync-song-controls button:active {
+    scale: 90%;
+}
+
+.music-sync-song-controls .music-sync-volume-icon {
+    display: inline-flex;
+    flex: 1 100%;
+    justify-content: center;
+    align-items: center;
+
+    background: none;
+    box-shadow: none;
+
+    padding: 0px;
+    margin: 0px;
+}
+
+.music-sync-song-controls .music-sync-volume-slider {
+    display: none;
+    position: absolute;
+    transform: translateY(-63px) rotate(270deg);
+}
+
+.music-sync-song-controls .music-sync-volume-icon:hover .music-sync-volume-slider,
+.music-sync-song-controls .music-sync-volume-icon:hover+.music-sync-volume-slider {
+    display: inline-flex;
 }
