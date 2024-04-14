@@ -2,7 +2,7 @@
 
 This plugin adds the ability to have Spotify Music Player as Widget.
 
-[](./images/example.png)
+![](./images/example.png)
 
 ## Contributing
 
