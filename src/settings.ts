@@ -10,15 +10,11 @@ import MusicSync from "./main";
 export interface MusicSyncSettings {
     // Spotify
     useSpotify: boolean;
-    spotifyClientId: string;
-    spotifyClientSecret: string;
     showSpotifyButton: boolean;
 }
 
 const DEFAULT_SETTINGS: MusicSyncSettings = {
     useSpotify: false,
-    spotifyClientId: "",
-    spotifyClientSecret: "",
     showSpotifyButton: true,
 };
 
@@ -61,30 +57,6 @@ export class SettingTab extends PluginSettingTab {
             new Setting(containerEl).setName("Spotify Settings").setHeading();
 
             new Setting(containerEl)
-                .setName("Client ID")
-                .setDesc("")
-                .addText((text) => {
-                    text.setValue(
-                        this.plugin.settings.spotifyClientId
-                    ).onChange(async (value) => {
-                        this.plugin.settings.spotifyClientId = value;
-                        await this.saveSettings();
-                    });
-                });
-
-            new Setting(containerEl)
-                .setName("Client Secret")
-                .setDesc("")
-                .addText((text) => {
-                    text.setValue(
-                        this.plugin.settings.spotifyClientSecret
-                    ).onChange(async (value) => {
-                        this.plugin.settings.spotifyClientSecret = value;
-                        await this.saveSettings();
-                    });
-                });
-
-            new Setting(containerEl)
                 .setName("Show Spotify Button")
                 .setDesc(
                     "Enable this to show the Spotify button on the sidebar"
@@ -104,12 +76,6 @@ export class SettingTab extends PluginSettingTab {
 
                             this.display();
                         });
-                });
-
-            new Setting(containerEl)
-                .setName("Login into Spotify")
-                .addButton((button) => {
-                    button.setButtonText("Login").onClick(async (event) => {});
                 });
         }
     }

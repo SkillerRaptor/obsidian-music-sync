@@ -6,23 +6,23 @@
 
 import { ItemView, WorkspaceLeaf } from "obsidian";
 
-import Component from "../ui/spotifyView.svelte";
+import Component from "./spotifyView.svelte";
 
-export const VIEW_TYPE_EXAMPLE = "example-view";
+export class SpotifyView extends ItemView {
+    public static VIEW_TYPE = "spotify-view";
 
-export class ExampleView extends ItemView {
-    component!: Component;
+    private component!: Component;
 
     constructor(leaf: WorkspaceLeaf) {
         super(leaf);
     }
 
     getViewType() {
-        return VIEW_TYPE_EXAMPLE;
+        return SpotifyView.VIEW_TYPE;
     }
 
     getDisplayText() {
-        return "Example view";
+        return "Spotify Widget";
     }
 
     async onOpen() {
